@@ -1,5 +1,6 @@
-opencv-python-headless==4.5.3.56
+
 tensorflow==2.13.0
+opencv-python==4.5.3.56
 
 mediapipe==0.10.5
 gtts==2.2.2
