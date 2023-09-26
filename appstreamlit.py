@@ -49,7 +49,12 @@ def predict_realtime():
     mp_hands = mp.solutions.hands
     hands = mp_hands.Hands(static_image_mode=False, max_num_hands=1, min_detection_confidence=0.5, min_tracking_confidence=0.5)
 
-    cap = cv2.VideoCapture(0)
+    cap = cv2.VideoCapture(1)
+
+    if not cap.isOpened():
+        st.write("Error: Camera not found.")
+    else:
+        st.write("Camera found and opened.")
 
     while True:
         ret, frame = cap.read()
