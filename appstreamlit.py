@@ -14,7 +14,7 @@ st.set_page_config(page_title="Sign2Speech Translation", page_icon="🤟")
 image_model = load_model('sign2speech_best_model.h5')
 
 # Load the trained model for real-time prediction
-realtime_model = tf.keras.models.load_model('main_model.h5')
+realtime_model = tf.keras.models.load_model('sign2speech_best_model.h5')
 
 # Define the classes corresponding to the signs ('0' to 'Z')
 classes = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z']
