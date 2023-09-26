@@ -1,32 +1,28 @@
 import streamlit as st
-import numpy as np
 import cv2
+import numpy as np
 import tensorflow as tf
 from tensorflow.keras.models import load_model
 from tensorflow.keras.preprocessing import image
-from io import BytesIO
-from gtts import gTTS
 import mediapipe as mp
+from io import BytesIO
 
-# Load the trained model for image prediction
-image_model = load_model('sign2speech_best_model.h5')
+# Set page title and icon
+st.set_page_config(page_title="Sign2Speech Translation", page_icon="🤟")
 
-# Load the trained model for real-time prediction
-realtime_model = tf.keras.models.load_model('main_model.h5')
-
-# Define the classes corresponding to the signs ('0' to 'Z')
-classes = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z']
-
-# Function to convert text to speech and play in real-time
+# Function to convert text to speech
 def text_to_speech(text):
-    tts = gTTS(text, lang='en')
-    audio_data = BytesIO()
-    tts.write_to_fp(audio_data)
-    audio_data.seek(0)
-    st.audio(audio_data, format='audio/mp3')
+    st.audio(text, format='audio/wav')
 
 # Function for image prediction
 def predict_image(image_data):
+    # Load the trained model for image prediction
+    image_model = load_model('sign2speech_best_model.h5')
+
+    # Define the classes corresponding to the signs ('0' to 'Z')
+    classes = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z']
+
+    # Perform image processing and make predictions
     img = image.load_img(BytesIO(image_data), target_size=(224, 224))
     img = image.img_to_array(img)
     img = np.expand_dims(img, axis=0)
@@ -37,11 +33,15 @@ def predict_image(image_data):
 
     st.write(f"Predicted sign: {predicted_class}")
 
-    if st.checkbox("Enable Speech Synthesis"):
-        text_to_speech(predicted_class)
+    # Automatically speak the predicted sign
+    audio_file = f'audio/{predicted_class}.wav'
+    text_to_speech(audio_file)
 
 # Function for real-time prediction
 def predict_realtime():
+    # Load the trained model for real-time prediction
+    realtime_model = tf.keras.models.load_model('sign2speech_best_model.h5')
+
     frame_width = 800
     frame_height = 600
     mp_hands = mp.solutions.hands
@@ -100,7 +100,7 @@ def predict_realtime():
     cv2.destroyAllWindows()
 
 # Create a Streamlit web application
-st.title('Sign Language Prediction')
+st.title('Sign2Speech Translation')
 
 # Choose an option
 option = st.sidebar.selectbox('Select an option', ['Predict using Image', 'Predict in Real Time'])
@@ -116,6 +116,5 @@ if option == 'Predict using Image':
 
 elif option == 'Predict in Real Time':
     st.sidebar.header('Real-Time Prediction')
-    st.text("Camera is on. Hold up a sign for prediction. Press q to close the camera.👍")
-    st.checkbox("Enable Speech Synthesis", key="speech_checkbox")
+    st.sidebar.text("Camera is on. Hold up a sign for prediction. Press q to close the camera.👍")
     predict_realtime()
