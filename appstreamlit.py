@@ -39,7 +39,7 @@ def predict_image(image_data):
 # Function for real-time prediction
 def predict_realtime():
     # Load the trained model for real-time prediction
-    realtime_model = tf.keras.models.load_model('sign2speech_best_model.h5')
+    realtime_model = load_model('sign2speech_best_model.h5')
 
     frame_width = 800
     frame_height = 600
