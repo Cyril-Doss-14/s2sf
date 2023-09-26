@@ -1,6 +1,5 @@
-
+opencv-python-headless
 tensorflow
 opencv-python
-
 mediapipe
 gtts
