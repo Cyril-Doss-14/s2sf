@@ -13,9 +13,6 @@ st.set_page_config(page_title="Sign2Speech Translation", page_icon="🤟")
 # Load the trained model for image prediction
 image_model = load_model('sign2speech_best_model.h5')
 
-# Load the trained model for real-time prediction
-realtime_model = tf.keras.models.load_model('sign2speech_best_model.h5')
-
 # Define the classes corresponding to the signs ('0' to 'Z')
 classes = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z']
 
@@ -49,7 +46,22 @@ def predict_realtime():
     mp_hands = mp.solutions.hands
     hands = mp_hands.Hands(static_image_mode=False, max_num_hands=1, min_detection_confidence=0.5, min_tracking_confidence=0.5)
 
-    cap = cv2.VideoCapture(0)
+    # Ask the user to select the camera
+    selected_camera = st.selectbox("Select the camera", ["Camera 0", "Camera 1", "Camera 2"])  # Add more options if needed
+
+    # Determine the camera index based on the user's selection
+    if selected_camera == "Camera 0":
+        camera_index = 0
+    elif selected_camera == "Camera 1":
+        camera_index = 1
+    elif selected_camera == "Camera 2":
+        camera_index = 2
+
+    cap = cv2.VideoCapture(camera_index)  # Use the selected camera index
+
+    if not cap.isOpened():
+        st.write("Error: Camera not found.")
+        return  # Exit the function if the camera is not found
 
     while True:
         ret, frame = cap.read()
@@ -80,7 +92,7 @@ def predict_realtime():
             hand_frame_resized = cv2.resize(hand_frame, (224, 224))
             hand_frame_normalized = hand_frame_resized / 255.0
 
-            prediction = realtime_model.predict(np.expand_dims(hand_frame_normalized, axis=0))
+            prediction = image_model.predict(np.expand_dims(hand_frame_normalized, axis=0))
             predicted_label = np.argmax(prediction)
             predicted_sign = classes[predicted_label]
             confidence = prediction[0][predicted_label]
@@ -102,7 +114,6 @@ def predict_realtime():
     cv2.destroyAllWindows()
 
 # Create a Streamlit web application
-# Create a Streamlit web application
 st.title('Sign Language Prediction')
 
 # Choose an option
@@ -119,8 +130,5 @@ if option == 'Predict using Image':
 
 elif option == 'Predict in Real Time':
     st.sidebar.header('Real-Time Prediction')
-    st.text("Camera is on. Hold up a sign for prediction. Press q to close the camera.👍")
+    st.text("Select the camera and hold up a sign for prediction. Press q to close the camera.👍")
     predict_realtime()
-
-
-
