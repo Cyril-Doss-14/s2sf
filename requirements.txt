@@ -1,6 +1,6 @@
 
-tensorflow==2.13.0
-opencv-python==4.5.3.56
+tensorflow
+opencv-python
 
-mediapipe==0.10.5
-gtts==2.2.2
+mediapipe
+gtts
