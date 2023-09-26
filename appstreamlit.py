@@ -51,7 +51,7 @@ def predict_realtime():
 
     cap=cv2.VideoCapture(0,cv2.CAP_DSHOW)
     if not (cap.isOpened()):
-    print("Could not open video device")
+        print("Could not open video device")
 
     while True:
         ret, frame = cap.read()
