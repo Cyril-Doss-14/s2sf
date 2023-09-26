@@ -46,11 +46,18 @@ def predict_realtime():
     mp_hands = mp.solutions.hands
     hands = mp_hands.Hands(static_image_mode=False, max_num_hands=1, min_detection_confidence=0.5, min_tracking_confidence=0.5)
 
-    cap = cv2.VideoCapture()  # Create a VideoCapture object without specifying an index
+    # Attempt to open the camera with various indices until a valid one is found
+    camera_index = 0
+    cap = None
+    while cap is None and camera_index < 10:
+        try:
+            cap = cv2.VideoCapture(camera_index)
+        except Exception as e:
+            camera_index += 1
 
-    if not cap.isOpened():
+    if cap is None:
         st.write("Error: No camera found.")
-        return  # Exit the function if no camera is found
+        return
 
     while True:
         ret, frame = cap.read()
