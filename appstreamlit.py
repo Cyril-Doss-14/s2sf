@@ -95,7 +95,7 @@ def predict_realtime():
 
         cv2.imshow('Sign Language Recognition', frame)
 
-        if cv2.waitKey(1) & 0xFF == ord('q'):
+        if cv2.waitKey(0) & 0xFF == ord('q'):
             break
 
     cap.release()
