@@ -2,3 +2,4 @@ tensorflow
 opencv-python-headless
 mediapipe
 gtts
+streamlit-webrtc
