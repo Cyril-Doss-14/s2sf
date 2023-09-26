@@ -1,13 +1,14 @@
 import streamlit as st
 import numpy as np
-import cv2
 import tensorflow as tf
 from tensorflow.keras.models import load_model
 from tensorflow.keras.preprocessing import image
 from io import BytesIO
 from gtts import gTTS
 import mediapipe as mp
+from streamlit_webrtc import VideoTransformerBase, webrtc_streamer
 
+# Set Streamlit page configuration
 st.set_page_config(page_title="Sign2Speech Translation", page_icon="🤟")
 
 # Load the trained model for image prediction
@@ -39,42 +40,26 @@ def predict_image(image_data):
     # Automatically speak the predicted sign
     text_to_speech(predicted_class)
 
-# Function for real-time prediction
-def predict_realtime():
-    frame_width = 800
-    frame_height = 600
-    mp_hands = mp.solutions.hands
-    hands = mp_hands.Hands(static_image_mode=False, max_num_hands=1, min_detection_confidence=0.5, min_tracking_confidence=0.5)
+# Function for real-time prediction using webcam stream
+class SignLanguagePredictor(VideoTransformerBase):
+    def __init__(self):
+        self.frame_width = 800
+        self.frame_height = 600
+        self.mp_hands = mp.solutions.hands
+        self.hands = self.mp_hands.Hands(static_image_mode=False, max_num_hands=1, min_detection_confidence=0.5, min_tracking_confidence=0.5)
+        self.realtime_model = load_model('sign2speech_best_model.h5')
 
-    # Attempt to open the camera with various indices until a valid one is found
-    camera_index = 0
-    cap = None
-    while cap is None and camera_index < 10:
-        try:
-            cap = cv2.VideoCapture(camera_index)
-        except Exception as e:
-            camera_index += 1
-
-    if cap is None:
-        st.write("Error: No camera found.")
-        return
-
-    while True:
-        ret, frame = cap.read()
-
-        if not ret:
-            break
-
-        frame = cv2.resize(frame, (frame_width, frame_height))
+    def transform(self, frame):
+        frame = cv2.resize(frame, (self.frame_width, self.frame_height))
         frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-        results = hands.process(frame_rgb)
+        results = self.hands.process(frame_rgb)
 
         if results.multi_hand_landmarks:
             hand_landmarks = results.multi_hand_landmarks[0]
-            min_x, max_x, min_y, max_y = frame_width, 0, frame_height, 0
+            min_x, max_x, min_y, max_y = self.frame_width, 0, self.frame_height, 0
 
             for landmark in hand_landmarks.landmark:
-                x, y = int(landmark.x * frame_width), int(landmark.y * frame_height)
+                x, y = int(landmark.x * self.frame_width), int(landmark.y * self.frame_height)
                 min_x = min(min_x, x)
                 max_x = max(max_x, x)
                 min_y = min(min_y, y)
@@ -83,12 +68,12 @@ def predict_realtime():
             hand_frame = frame[min_y:max_y, min_x:max_x]
 
             if not hand_frame.size:
-                continue
+                return frame
 
             hand_frame_resized = cv2.resize(hand_frame, (224, 224))
             hand_frame_normalized = hand_frame_resized / 255.0
 
-            prediction = image_model.predict(np.expand_dims(hand_frame_normalized, axis=0))
+            prediction = self.realtime_model.predict(np.expand_dims(hand_frame_normalized, axis=0))
             predicted_label = np.argmax(prediction)
             predicted_sign = classes[predicted_label]
             confidence = prediction[0][predicted_label]
@@ -96,18 +81,12 @@ def predict_realtime():
             text = f'Predicted Sign: {predicted_sign} (Confidence: {confidence:.2f})'
             cv2.putText(frame, text, (10, 40), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0), 2, cv2.LINE_AA)
 
-            for connection in mp_hands.HAND_CONNECTIONS:
-                x1, y1 = int(hand_landmarks.landmark[connection[0]].x * frame_width), int(hand_landmarks.landmark[connection[0]].y * frame_height)
-                x2, y2 = int(hand_landmarks.landmark[connection[1]].x * frame_width), int(hand_landmarks.landmark[connection[1]].y * frame_height)
+            for connection in self.mp_hands.HAND_CONNECTIONS:
+                x1, y1 = int(hand_landmarks.landmark[connection[0]].x * self.frame_width), int(hand_landmarks.landmark[connection[0]].y * self.frame_height)
+                x2, y2 = int(hand_landmarks.landmark[connection[1]].x * self.frame_width), int(hand_landmarks.landmark[connection[1]].y * self.frame_height)
                 cv2.line(frame, (x1, y1), (x2, y2), (0, 255, 0), 2)
 
-        cv2.imshow('Sign Language Recognition', frame)
-
-        if cv2.waitKey(1) & 0xFF == ord('q'):
-            break
-
-    cap.release()
-    cv2.destroyAllWindows()
+        return frame
 
 # Create a Streamlit web application
 st.title('Sign Language Prediction')
@@ -126,5 +105,8 @@ if option == 'Predict using Image':
 
 elif option == 'Predict in Real Time':
     st.sidebar.header('Real-Time Prediction')
-    st.text("Camera is on. Hold up a sign for prediction. Press q to close the camera.👍")
-    predict_realtime()
+    st.text("Camera is on. Hold up a sign for prediction.")
+    webrtc_ctx = webrtc_streamer(key="example", video_transformer_factory=SignLanguagePredictor)
+
+if __name__ == '__main__':
+    main()
