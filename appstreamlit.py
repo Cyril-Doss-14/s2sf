@@ -46,22 +46,11 @@ def predict_realtime():
     mp_hands = mp.solutions.hands
     hands = mp_hands.Hands(static_image_mode=False, max_num_hands=1, min_detection_confidence=0.5, min_tracking_confidence=0.5)
 
-    # Ask the user to select the camera
-    selected_camera = st.selectbox("Select the camera", ["Camera 0", "Camera 1", "Camera 2"])  # Add more options if needed
-
-    # Determine the camera index based on the user's selection
-    if selected_camera == "Camera 0":
-        camera_index = 0
-    elif selected_camera == "Camera 1":
-        camera_index = 1
-    elif selected_camera == "Camera 2":
-        camera_index = 2
-
-    cap = cv2.VideoCapture(camera_index)  # Use the selected camera index
+    cap = cv2.VideoCapture()  # Create a VideoCapture object without specifying an index
 
     if not cap.isOpened():
-        st.write("Error: Camera not found.")
-        return  # Exit the function if the camera is not found
+        st.write("Error: No camera found.")
+        return  # Exit the function if no camera is found
 
     while True:
         ret, frame = cap.read()
@@ -130,5 +119,5 @@ if option == 'Predict using Image':
 
 elif option == 'Predict in Real Time':
     st.sidebar.header('Real-Time Prediction')
-    st.text("Select the camera and hold up a sign for prediction. Press q to close the camera.👍")
+    st.text("Camera is on. Hold up a sign for prediction. Press q to close the camera.👍")
     predict_realtime()
