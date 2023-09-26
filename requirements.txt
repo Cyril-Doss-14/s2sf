@@ -1,4 +1,5 @@
 opencv-python-headless==4.5.3.56
 tensorflow==2.13.0
-gtts==2.2.2
+numpy==1.21.2
 mediapipe==0.8.7
+gtts==2.2.2
